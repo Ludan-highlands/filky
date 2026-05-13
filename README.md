@@ -6,13 +6,13 @@ Webova verze mistni karetni hry Filky.
 
 Cilem je vytvorit jednoduchou online karetní hru a pri tom se naucit zakladni praci s Gitem, GitHubem a GitHub Pages.
 
-Projekt bude zatim staticky web bez serveru:
+Projekt je staticky web bez serveru, postaveny jako Vite aplikace:
 
 - HTML
 - CSS
-- JavaScript
+- TypeScript
 
-Pozdeji je mozne rozhodnout, jestli zustat u jednoduche varianty, nebo prejit na React/Vite podle narocnosti hry.
+React se zatim nepouziva. Herni logika je oddelena od UI, aby sla dobre testovat a pozdeji pripadne napojit na slozitejsi rozhrani.
 
 ## Zakladni princip hry
 
@@ -56,15 +56,66 @@ Ma pomoct pochopit:
 
 Screenshot neni zavazny finalni design. Pri tvorbe nove verze je mozne UI zjednodusit, zprehlednit nebo navrhnout lepe.
 
+V koreni projektu jsou take pracovni obrazkove navrhy karet:
+
+```text
+card_back.png
+cards_hearts.png
+```
+
+Tyto soubory je vhodne pri pristi praci zkontrolovat a pripadne pouzit jako zaklad grafiky karet. Podrobnosti a upozorneni jsou v [docs/soucasny-stav.md](docs/soucasny-stav.md).
+
 ## Stav projektu
 
-Zatim je pripraven cisty adresar projektu a zakladni dokumentace. Herni kod jeste neni vytvoren.
+Je vytvoren prvni funkcni zaklad hry:
+
+- Vite + TypeScript
+- textove UI pro ctyri stychova trestna kola
+- 1 lidsky hrac proti 3 botum
+- rozdani 32 mariaskych karet
+- povinnost ctit vynesenou barvu
+- vyhodnoceni viteze stychu
+- pocitani trestu do banku pro Cervene, Filky, Kral a Stychy
+- postup mezi stychovymi koly vcetne posunu rozdavajiciho
+- zaklad kola Vykladani vcetne stani, poradi hracu a rozdeleni banku
+- pokracovani do dalsi hry se zachovanim penez a posunem prvniho rozdavajiciho
+- pauza po dokonceni stychu, aby hrac videl vsechny zahrane karty
+- vizualni pocet karet souperu pomoci tecek
+- automaticke testy zakladni herni logiky
+
+Podrobny stav, spousteni, struktura kodu a doporucene dalsi kroky jsou v souboru [docs/soucasny-stav.md](docs/soucasny-stav.md).
+
+## Spusteni projektu
+
+Po instalaci zavislosti:
+
+```bash
+npm install
+npm run dev
+```
+
+Testy:
+
+```bash
+npm test
+```
+
+Produkci build pro GitHub Pages:
+
+```bash
+npm run build
+```
+
+Poznamka k mistnimu prostredi: pri instalaci na nekterych pripojenych discich muze `npm install` narazit na omezeni opravneni u spustitelnych souboru. V takovem pripade je mozne projekt presunout na bezny linuxovy disk, nebo nastroje docasne instalovat mimo projekt.
+
+V aktualnim sezeni byl kvuli omezeni disku pouzit docasny adresar `/tmp/filky-deps`. Podrobnosti jsou v [docs/soucasny-stav.md](docs/soucasny-stav.md).
 
 ## Jak zacit v nove konverzaci
 
 Pokud tento projekt otevira AI/Codex v nove konverzaci, nejdrive si ma precist:
 
 - `README.md`
+- `docs/soucasny-stav.md`
 - `docs/pravidla.md`
 - zohlednit vizualni referenci `docs/reference/puvodni-design.png`, pokud se bude resit UI
 
@@ -101,8 +152,7 @@ Naopak se nema bez kontroly prebirat cele UI ani cela struktura aplikace.
 
 Doporuceny postup:
 
-1. Nejdrive rozhodnout technologii projektu.
-2. Pro jednoduchy zacatek lze pouzit HTML, CSS a JavaScript.
-3. Pokud bude hra slozitejsi na stav a UI, je mozne pouzit React/Vite.
-4. Pri implementaci vychazet primarne z pravidel v `docs/pravidla.md`.
-5. `../Puvodni` pouzivat jen jako pomocnou referenci, ne jako zdroj pravdy.
+1. Pri implementaci vychazet primarne z pravidel v `docs/pravidla.md`.
+2. `../Puvodni` pouzivat jen jako pomocnou referenci, ne jako zdroj pravdy.
+3. Nejdrive rozsirovat a testovat herni logiku.
+4. UI vylepsovat postupne az nad overenymi pravidly.
