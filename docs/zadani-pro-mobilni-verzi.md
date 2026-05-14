@@ -445,6 +445,16 @@ Doporuceny cil:
 - aktualni stav hry musi byt citelny bez zoomovani
 - boti nemusi byt fyzicky rozmistení kolem stolu
 
+Zakladni navrhovy princip mobilniho UI:
+
+- na telefonu maji byt stale videt hlavne hracovy karty a karty na stole
+- informace okolo hry se maji zmensit na minimum
+- misto rubu karet souperu staci zobrazovat tecky podle poctu karet
+- u souperu ponechat jmeno, konto a pocet karet
+- zbytecne popisky vynechat, pokud je informace zrejma z polohy nebo grafiky
+- hlavička stránky ma byt kompaktni, ne velky desktopovy panel
+- mene dulezite informace mohou byt ve spodnim vysouvacim panelu nebo v menu
+
 Doporucena mobilni struktura obrazovky:
 
 1. Horni kompaktni stavovy panel
@@ -497,18 +507,45 @@ Dulezite:
 
 Vykladani je prostorove narocnejsi nez stych.
 
-Doporuceni:
+Desktopove UI muze zobrazovat plnou tabulku 4 x 8, ale pro mobil to pravdepodobne neni nejlepsi reseni. Tabulka ma 32 poli a na telefonu muze byt neprehledna nebo prilis mala.
+
+Doporuceny mobilni princip:
 
 - zachovat 4 rady pod sebou
-- kazda rada ma sloty:
+- nezobrazovat nutne vsech 8 pozic v kazde rade
+- z kazde zalozene rady zobrazovat hlavne aktualni okrajove karty
+- hrac podle okrajovych karet pozna, kam lze prikladat
+- legalni karty v ruce musi byt zaroven jasne zvyraznene
+- nelegalni karty v ruce maji byt ztlumene
+
+Logika zobrazeni rady:
+
+- pokud rada jeste neni zalozena, zobrazit jen prazdne nebo jemne naznacene misto pro Spodka
+- pokud je v rade jen Spodek, zobrazit pouze Spodka
+- pokud se prikladalo na nizsi stranu, zobrazit aktualni nejnizsi kartu rady
+- pokud se prikladalo na vyssi stranu, zobrazit aktualni nejvyssi kartu rady
+- pokud jsou v rade karty na obou stranach Spodka, zobrazit oba aktualni okraje
+- mezi okraji muze byt mala mezera nebo jemny naznak, ze mezi nimi uz lezi dalsi karty
+
+Priklad:
+
+- pokud je v rade `10 - spodek`, na mobilu muze byt videt jen `10` a `spodek`
+- hrac vi, ze muze prilozit bud `9`, nebo `svrsek`
+- pokud prilozi `svrsek`, muze byt na radku videt `10` a `svrsek`
+- hrac vi, ze dalsi mozne prikladani je `9` nebo `kral`
+
+Plna logicka rada zustava:
 
 ```text
 7 8 9 10 | spodek | svrsek kral eso
 ```
 
-- na velmi uzkem displeji muze byt vykladaci plocha horizontalne posuvna
-- alternativne lze zmensit karty ve vykladani, ale ruka hrace musi zustat dobre klikatelná
-- neni nutne zobrazovat nazvy barev, pokud je barva karet dostatecne citelna
+Na mobilu ji ale neni nutne celou zobrazovat najednou. Dulezite je zachovat pravidla prikladani, ne nutne plnou vizualni tabulku.
+
+Dodatecna doporuceni:
+
+- neni nutne zobrazovat nazvy barev, pokud je barva karet dostatecne citelna z grafiky
+- pokud by zkracene rady nebyly pri testovani dost jasne, lze pridat prepinatelny detail nebo rozbaleni konkretni rady
 - akce botu musi byt postupna a vizualne patrna
 - pokud hrac nema platny tah, je potreba jasne ukazat, ze stoji nebo ze hra pokracuje automaticky
 
