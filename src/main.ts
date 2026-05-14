@@ -109,8 +109,6 @@ function renderTrickRound(roundState: TrickRoundState): void {
         ${renderOpponentSeat(roundState, 3, "right", roundState.players[3].money - roundState.penalties[3], roundState.penalties[3])}
       </section>
 
-      ${roundState.awaitingNextTrick ? `<section class="table-action"><button class="secondary" data-action="next-trick">Dalsi stych</button></section>` : ""}
-
       <section class="bottom-area">
         ${renderHumanStatus(roundState, roundState.players[0].money - roundState.penalties[0], `Plati ${roundState.penalties[0]} Kc`)}
         <div class="hand ${roundState.currentPlayer === 0 ? "active" : ""}">
@@ -161,15 +159,6 @@ function renderTrickRound(roundState: TrickRoundState): void {
     scheduleAutomatedTurn();
   });
 
-  app.querySelector<HTMLButtonElement>("[data-action='next-trick']")?.addEventListener("click", () => {
-    if (state.type === "vykladani") {
-      return;
-    }
-
-    state = continueAfterCompletedTrick(state);
-    render();
-    scheduleBotTurn();
-  });
 }
 
 function renderFinishedRoundAction(roundState: TrickRoundState): string {
@@ -492,7 +481,26 @@ function clearPendingBotTurn(): void {
 function scheduleBotTurn(): void {
   clearPendingBotTurn();
 
-  if (state.type === "vykladani" || state.finished || state.awaitingNextTrick || state.currentPlayer === 0) {
+  if (state.type === "vykladani" || state.finished) {
+    return;
+  }
+
+  if (state.awaitingNextTrick) {
+    botTurnTimer = window.setTimeout(() => {
+      botTurnTimer = undefined;
+
+      if (state.type === "vykladani" || state.finished || !state.awaitingNextTrick) {
+        return;
+      }
+
+      state = continueAfterCompletedTrick(state);
+      render();
+      scheduleBotTurn();
+    }, 1700);
+    return;
+  }
+
+  if (state.currentPlayer === 0) {
     return;
   }
 

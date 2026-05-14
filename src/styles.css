@@ -745,9 +745,14 @@ h1 {
   }
 
   .trick {
-    grid-template-columns: repeat(2, minmax(64px, var(--card-width)));
+    grid-template-columns: repeat(2, 60px);
     gap: 10px 12px;
     min-height: 0;
+  }
+
+  .played-card .card-face {
+    width: 60px;
+    border-radius: 5px;
   }
 
   .played-card {
