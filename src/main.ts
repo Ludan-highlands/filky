@@ -71,11 +71,11 @@ function renderTrickRound(roundState: TrickRoundState): void {
           <span>Kolo: ${getRoundTitle(roundState.type)}</span>
         </div>
         <div class="status">
-          <strong>Bank: ${roundState.bank} Kc</strong>
-          <span>Tve penize: ${roundState.players[0].money - roundState.penalties[0]} Kc</span>
-          <span>Rozdava: ${roundState.players[roundState.dealer].name}</span>
+          <strong>Bank: ${roundState.bank} Kč</strong>
+          <span>Tvoje peníze: ${roundState.players[0].money - roundState.penalties[0]} Kč</span>
+          <span>Rozdává: ${roundState.players[roundState.dealer].name}</span>
         </div>
-        <button class="secondary" data-action="new-game">Nova hra</button>
+        <button class="secondary" data-action="new-game">Nová hra</button>
       </header>
 
       <section class="tabletop">
@@ -99,10 +99,10 @@ function renderTrickRound(roundState: TrickRoundState): void {
           </div>
           ${
             displayedWinner && roundState.trick.length > 0
-              ? `<div class="taking-label">Aktualne bere: ${roundState.players[displayedWinner.playerId].name}</div>`
+              ? `<div class="taking-label">Aktuálně bere: ${roundState.players[displayedWinner.playerId].name}</div>`
               : displayedWinner
-                ? `<div class="taking-label">Posledni stych vzal: ${roundState.players[displayedWinner.playerId].name}</div>`
-              : `<div class="taking-label">Ceka se na vynos.</div>`
+                ? `<div class="taking-label">Poslední štych vzal: ${roundState.players[displayedWinner.playerId].name}</div>`
+              : `<div class="taking-label">Čeká se na výnos.</div>`
           }
         </section>
 
@@ -110,7 +110,7 @@ function renderTrickRound(roundState: TrickRoundState): void {
       </section>
 
       <section class="bottom-area">
-        ${renderHumanStatus(roundState, roundState.players[0].money - roundState.penalties[0], `Plati ${roundState.penalties[0]} Kc`)}
+        ${renderHumanStatus(roundState, roundState.players[0].money - roundState.penalties[0], `Platí ${roundState.penalties[0]} Kč`)}
         <div class="hand ${roundState.currentPlayer === 0 ? "active" : ""}">
           ${renderTrickHand(roundState)}
         </div>
@@ -165,10 +165,10 @@ function renderFinishedRoundAction(roundState: TrickRoundState): string {
   const nextRound = createNextTrickRound(roundState, () => 0);
 
   if (!nextRound) {
-    return `<button class="secondary" data-action="next-round">Pokracovat na Vykladani</button>`;
+    return `<button class="secondary" data-action="next-round">Pokračovat na Vykládání</button>`;
   }
 
-  return `<button class="secondary" data-action="next-round">Pokracovat na ${getRoundTitle(nextRound.type)}</button>`;
+  return `<button class="secondary" data-action="next-round">Pokračovat na ${getRoundTitle(nextRound.type)}</button>`;
 }
 
 function renderTrickHand(roundState: TrickRoundState): string {
@@ -196,14 +196,14 @@ function renderLayingRound(roundState: LayingRoundState): void {
       <header class="topbar">
         <div class="brand">
           <h1>Filky</h1>
-          <span>Kolo: Vykladani</span>
+          <span>Kolo: Vykládání</span>
         </div>
         <div class="status">
-          <strong>Bank: ${roundState.bank} Kc</strong>
-          <span>Tve penize: ${roundState.players[0].money} Kc</span>
-          <span>Rozdava: ${roundState.players[roundState.dealer].name}</span>
+          <strong>Bank: ${roundState.bank} Kč</strong>
+          <span>Tvoje peníze: ${roundState.players[0].money} Kč</span>
+          <span>Rozdává: ${roundState.players[roundState.dealer].name}</span>
         </div>
-        <button class="secondary" data-action="new-game">Nova hra</button>
+        <button class="secondary" data-action="new-game">Nová hra</button>
       </header>
 
       <section class="tabletop">
@@ -213,14 +213,14 @@ function renderLayingRound(roundState: LayingRoundState): void {
         <section class="center">
           <div class="message">${roundState.message}</div>
           ${roundState.finished ? renderPayoutSummary(roundState) : ""}
-          ${roundState.finished ? `<button class="secondary" data-action="continue-game">Dalsi hra</button>` : ""}
+          ${roundState.finished ? `<button class="secondary" data-action="continue-game">Další hra</button>` : ""}
           ${renderLayingBoard(roundState)}
           ${renderCompactLayingBoard(roundState)}
           <div class="taking-label">
-            Poradi: ${
+            Pořadí: ${
               roundState.finishedOrder.length > 0
                 ? roundState.finishedOrder.map((playerId) => roundState.players[playerId].name).join(", ")
-                : "zatim nikdo"
+                : "zatím nikdo"
             }
           </div>
         </section>
@@ -283,7 +283,7 @@ function renderPayoutSummary(roundState: LayingRoundState): string {
           (player) => `
             <div>
               <span>${player.name}</span>
-              <strong>+${roundState.payouts[player.id]} Kc</strong>
+              <strong>+${roundState.payouts[player.id]} Kč</strong>
             </div>
           `,
         )
@@ -396,13 +396,13 @@ function renderOpponentSeat(
 ): string {
   const player = roundState.players[playerId];
   const cardCount = roundState.hands[playerId].length;
-  const paymentLabel = payment === undefined ? "" : `<span>Plati ${payment} Kc</span>`;
+  const paymentLabel = payment === undefined ? "" : `<span>Platí ${payment} Kč</span>`;
 
   return `
     <article class="player seat-${position} ${roundState.currentPlayer === player.id ? "active" : ""} ${highlightedPlayerId === player.id ? "pulse" : ""}">
       <div class="player-meta">
         <strong>${displayPlayerName(player.name)}</strong>
-        <span>${money} Kc</span>
+        <span>${money} Kč</span>
         ${paymentLabel}
         <span>${cardCount} karet</span>
       </div>
@@ -415,7 +415,7 @@ function renderHumanStatus(roundState: GameUiState, money: number, detail: strin
   return `
     <section class="human-status ${roundState.currentPlayer === 0 ? "active" : ""} ${highlightedPlayerId === 0 ? "pulse" : ""}">
       <strong>${displayPlayerName(roundState.players[0].name)}</strong>
-      <span>${money} Kc</span>
+      <span>${money} Kč</span>
       <span>${detail}</span>
     </section>
   `;
@@ -451,7 +451,7 @@ function rankLabel(rank: Rank): string {
     "10": "10",
     spodek: "Spodek",
     svrsek: "Svrsek",
-    kral: "Kral",
+    kral: "Král",
     eso: "Eso",
   };
 

@@ -25,11 +25,18 @@ export function cardLabel(card: Card): string {
     "10": "10",
     spodek: "Spodek",
     svrsek: "Svrsek",
-    kral: "Kral",
+    kral: "Král",
     eso: "Eso",
   };
 
-  return `${rankLabels[card.rank]} ${card.suit}`;
+  const suitLabels: Record<Suit, string> = {
+    cervene: "červené",
+    kule: "kule",
+    zelene: "zelené",
+    zaludy: "žaludy",
+  };
+
+  return `${rankLabels[card.rank]} ${suitLabels[card.suit]}`;
 }
 
 export function rankStrength(rank: Rank): number {

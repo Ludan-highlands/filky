@@ -48,7 +48,7 @@ export function createTrickRound(options: {
     bank: options.bank,
     finished: false,
     awaitingNextTrick: false,
-    message: `${options.players[leader].name} vynasi prvni stych kola ${getRoundTitle(options.type)}.`,
+    message: `${options.players[leader].name} vynáší první štych kola ${getRoundTitle(options.type)}.`,
   };
 }
 
@@ -95,14 +95,14 @@ export function playCard(state: TrickRoundState, playerId: number, card: Card): 
   if (state.currentPlayer !== playerId) {
     return {
       ...state,
-      message: `Ted je na tahu ${state.players[state.currentPlayer].name}.`,
+      message: `Teď je na tahu ${state.players[state.currentPlayer].name}.`,
     };
   }
 
   if (!isLegalPlay(state, playerId, card)) {
     return {
       ...state,
-      message: "Tuhle kartu ted zahrat nemuzes, musis ctit vynesenou barvu.",
+      message: "Tuhle kartu teď zahrát nemůžeš, musíš ctít vynesenou barvu.",
     };
   }
 
@@ -125,7 +125,7 @@ export function playCard(state: TrickRoundState, playerId: number, card: Card): 
     hands,
     trick,
     currentPlayer,
-    message: `${state.players[currentPlayer].name} je na tahu. Aktualne bere ${
+    message: `${state.players[currentPlayer].name} je na tahu. Aktuálně bere ${
       state.players[currentWinner?.playerId ?? playerId].name
     }.`,
   };
@@ -159,7 +159,7 @@ export function continueAfterCompletedTrick(state: TrickRoundState): TrickRoundS
   return {
     ...state,
     awaitingNextTrick: false,
-    message: `${state.players[state.currentPlayer].name} vynasi dalsi stych.`,
+    message: `${state.players[state.currentPlayer].name} vynáší další štych.`,
   };
 }
 
@@ -183,10 +183,10 @@ export function chooseBotCard(state: TrickRoundState, playerId: number): Card {
 
 export function getRoundTitle(type: TrickRoundType): string {
   const titles: Record<TrickRoundType, string> = {
-    cervene: "Cervene",
+    cervene: "Červené",
     filky: "Filky",
-    kral: "Kral",
-    stychy: "Stychy",
+    kral: "Král",
+    stychy: "Štychy",
   };
 
   return titles[type];
@@ -242,8 +242,8 @@ function finishTrick(state: TrickRoundState): TrickRoundState {
     finished,
     awaitingNextTrick: !finished,
     message: finished
-      ? `Kolo ${getRoundTitle(state.type)} skoncilo. Bank: ${bank} Kc.`
-      : `${state.players[winner.playerId].name} bere stych za ${penalty} Kc a vynasi dalsi.`,
+      ? `Kolo ${getRoundTitle(state.type)} skončilo. Bank: ${bank} Kč.`
+      : `${state.players[winner.playerId].name} bere štych za ${penalty} Kč a vynáší další.`,
   };
 }
 

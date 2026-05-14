@@ -1,4 +1,4 @@
-import { Card, createDeck, isSameCard, Rank, ranks, shuffleDeck, sortHand, Suit, suits } from "./cards";
+import { Card, cardLabel, createDeck, isSameCard, Rank, ranks, shuffleDeck, sortHand, Suit, suits } from "./cards";
 import { advancePlayer, nextPlayer, Player } from "./players";
 import { dealCards } from "./trickRound";
 
@@ -45,7 +45,7 @@ export function createLayingRound(options: {
     payouts: [0, 0, 0, 0],
     bank: options.bank,
     finished: false,
-    message: `${options.players[currentPlayer].name} zacina Vykladani.`,
+    message: `${options.players[currentPlayer].name} začíná Vykládání.`,
   };
 }
 
@@ -73,14 +73,14 @@ export function playLayingCard(state: LayingRoundState, playerId: number, card: 
   if (state.currentPlayer !== playerId) {
     return {
       ...state,
-      message: `Ted je na tahu ${state.players[state.currentPlayer].name}.`,
+      message: `Teď je na tahu ${state.players[state.currentPlayer].name}.`,
     };
   }
 
   if (!isLegalLayingPlay(state, playerId, card)) {
     return {
       ...state,
-      message: "Tuhle kartu ted nelze vylozit.",
+      message: "Tuhle kartu teď nelze vyložit.",
     };
   }
 
@@ -107,7 +107,7 @@ export function playLayingCard(state: LayingRoundState, playerId: number, card: 
       payouts,
       finished,
       bank: 0,
-      message: "Vykladani skoncilo. Bank byl rozdelen.",
+      message: "Vykládání skončilo. Bank byl rozdělen.",
     };
   }
 
@@ -120,7 +120,7 @@ export function playLayingCard(state: LayingRoundState, playerId: number, card: 
     finishedOrder,
     passedPlayers: state.passedPlayers.filter((id) => id !== playerId),
     currentPlayer,
-    message: `${state.players[playerId].name} vylozil ${card.rank} ${card.suit}. Na tahu je ${state.players[currentPlayer].name}.`,
+    message: `${state.players[playerId].name} vyložil kartu ${cardLabel(card)}. Na tahu je ${state.players[currentPlayer].name}.`,
   };
 }
 
@@ -132,14 +132,14 @@ export function passLayingTurn(state: LayingRoundState, playerId: number): Layin
   if (state.currentPlayer !== playerId) {
     return {
       ...state,
-      message: `Ted je na tahu ${state.players[state.currentPlayer].name}.`,
+      message: `Teď je na tahu ${state.players[state.currentPlayer].name}.`,
     };
   }
 
   if (getLegalLayingCards(state, playerId).length > 0) {
     return {
       ...state,
-      message: "Stojis jen tehdy, kdyz nemas zadnou platnou kartu.",
+      message: "Stojíš jen tehdy, když nemáš žádnou platnou kartu.",
     };
   }
 
@@ -150,7 +150,7 @@ export function passLayingTurn(state: LayingRoundState, playerId: number): Layin
     ...state,
     passedPlayers,
     currentPlayer,
-    message: `${state.players[playerId].name} stoji. Na tahu je ${state.players[currentPlayer].name}.`,
+    message: `${state.players[playerId].name} stojí. Na tahu je ${state.players[currentPlayer].name}.`,
   };
 }
 
