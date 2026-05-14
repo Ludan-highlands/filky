@@ -409,19 +409,19 @@ h1 {
 }
 
 .suit-cervene {
-  background-image: url("../cards_hearts.webp");
+  background-image: url("../cards_hearts.png");
 }
 
 .suit-kule {
-  background-image: url("../cards_bells.webp");
+  background-image: url("../cards_bells.png");
 }
 
 .suit-zelene {
-  background-image: url("../cards_leaves.webp");
+  background-image: url("../cards_leaves.png");
 }
 
 .suit-zaludy {
-  background-image: url("../cards_acorns.webp");
+  background-image: url("../cards_acorns.png");
 }
 
 .rank-7 {
