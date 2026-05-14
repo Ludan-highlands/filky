@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - mobile-ui
   workflow_dispatch:
 
 permissions:
