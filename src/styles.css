@@ -219,12 +219,13 @@ h1 {
 .taking-label {
   min-height: 24px;
   max-width: 760px;
-  color: #ffe08c;
+  color: #ff3d4f;
   font-weight: 800;
   text-align: center;
   text-shadow:
-    0 2px 4px rgb(0 0 0 / 0.72),
-    0 0 10px rgb(0 0 0 / 0.42);
+    0 2px 4px rgb(0 0 0 / 0.82),
+    0 0 2px rgb(255 247 216 / 0.7),
+    0 0 10px rgb(0 0 0 / 0.48);
 }
 
 .trick {
@@ -741,12 +742,13 @@ h1 {
   .taking-label {
     max-width: 100%;
     min-height: 18px;
-    color: #ffe08c;
+    color: #ff3d4f;
     font-size: 12px;
     font-weight: 800;
     line-height: 1.25;
     text-shadow:
       0 2px 3px rgb(0 0 0 / 0.86),
+      0 0 2px rgb(255 247 216 / 0.72),
       0 0 8px rgb(0 0 0 / 0.64);
   }
 
