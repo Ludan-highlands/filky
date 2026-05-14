@@ -64,7 +64,7 @@ function renderTrickRound(roundState: TrickRoundState): void {
   const displayedTrick = roundState.trick.length > 0 ? roundState.trick : (roundState.completedTricks.at(-1) ?? []);
   const displayedWinner = roundState.trick.length > 0 ? currentWinner : getCurrentTrickWinner(displayedTrick);
   app.innerHTML = `
-    <main class="table">
+    <main class="table table-trick">
       <header class="topbar">
         <div class="brand">
           <h1>Filky</h1>
@@ -203,7 +203,7 @@ function renderTrickHand(roundState: TrickRoundState): string {
 
 function renderLayingRound(roundState: LayingRoundState): void {
   app.innerHTML = `
-    <main class="table">
+    <main class="table table-laying">
       <header class="topbar">
         <div class="brand">
           <h1>Filky</h1>
@@ -226,6 +226,7 @@ function renderLayingRound(roundState: LayingRoundState): void {
           ${roundState.finished ? renderPayoutSummary(roundState) : ""}
           ${roundState.finished ? `<button class="secondary" data-action="continue-game">Dalsi hra</button>` : ""}
           ${renderLayingBoard(roundState)}
+          ${renderCompactLayingBoard(roundState)}
           <div class="taking-label">
             Poradi: ${
               roundState.finishedOrder.length > 0
@@ -304,7 +305,7 @@ function renderPayoutSummary(roundState: LayingRoundState): string {
 
 function renderLayingBoard(roundState: LayingRoundState): string {
   return `
-    <div class="laying-board">
+    <div class="laying-board full-board">
       ${suits
         .map(
           (suit) => `
@@ -315,6 +316,50 @@ function renderLayingBoard(roundState: LayingRoundState): string {
                   .join("")}
               </div>
             </div>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderCompactLayingBoard(roundState: LayingRoundState): string {
+  return `
+    <div class="laying-board-compact">
+      ${suits.map((suit) => renderCompactLayingRow(roundState, suit)).join("")}
+    </div>
+  `;
+}
+
+function renderCompactLayingRow(roundState: LayingRoundState, suit: Suit): string {
+  const row = roundState.rows[suit];
+
+  if (!row) {
+    return `
+      <div class="compact-laying-row">
+        <span class="compact-laying-slot empty spodek-slot">Spodek</span>
+      </div>
+    `;
+  }
+
+  const visibleRanks =
+    row.low === "spodek" && row.high === "spodek"
+      ? (["spodek"] as Rank[])
+      : row.low === "spodek"
+        ? (["spodek", row.high] as Rank[])
+        : row.high === "spodek"
+          ? ([row.low, "spodek"] as Rank[])
+          : ([row.low, row.high] as Rank[]);
+
+  return `
+    <div class="compact-laying-row">
+      ${visibleRanks
+        .map(
+          (rank, index) => `
+            ${index > 0 ? `<span class="compact-laying-gap" aria-hidden="true"></span>` : ""}
+            <span class="compact-laying-slot ${rank === "spodek" ? "spodek-slot" : ""}">
+              ${renderCardFace({ suit, rank })}
+            </span>
           `,
         )
         .join("")}
@@ -367,7 +412,7 @@ function renderOpponentSeat(
   return `
     <article class="player seat-${position} ${roundState.currentPlayer === player.id ? "active" : ""} ${highlightedPlayerId === player.id ? "pulse" : ""}">
       <div class="player-meta">
-        <strong>${player.name}</strong>
+        <strong>${displayPlayerName(player.name)}</strong>
         <span>${money} Kc</span>
         ${paymentLabel}
         <span>${cardCount} karet</span>
@@ -380,11 +425,15 @@ function renderOpponentSeat(
 function renderHumanStatus(roundState: GameUiState, money: number, detail: string): string {
   return `
     <section class="human-status ${roundState.currentPlayer === 0 ? "active" : ""} ${highlightedPlayerId === 0 ? "pulse" : ""}">
-      <strong>${roundState.players[0].name}</strong>
+      <strong>${displayPlayerName(roundState.players[0].name)}</strong>
       <span>${money} Kc</span>
       <span>${detail}</span>
     </section>
   `;
+}
+
+function displayPlayerName(name: string): string {
+  return name.replace(/^Bot /, "");
 }
 
 function renderCardFace(card: Card): string {
