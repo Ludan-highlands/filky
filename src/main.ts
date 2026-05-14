@@ -1,23 +1,26 @@
 import "./styles.css";
-import { cardId, cardLabel, Card } from "./game/cards";
+import { cardId, cardLabel, Card, Rank, ranks, Suit, suits } from "./game/cards";
 import {
+  chooseBotCard,
   continueAfterCompletedTrick,
   createNextTrickRound,
   getRoundTitle,
-  playBotsUntilHumanTurn,
+  playCard,
   playHumanCard,
   settleRoundPenalties,
   TrickRoundState,
 } from "./game/trickRound";
 import { createFollowingGame, createInitialGame } from "./game/gameFlow";
+import { createPlayers } from "./game/players";
 import { getCurrentTrickWinner, getLegalCards } from "./game/trick";
 import {
+  chooseLayingBotCard,
   createLayingRound,
   getLegalLayingCards,
-  getLayingRowsForDisplay,
   LayingRoundState,
+  passLayingTurn,
   playHumanLayingCard,
-  playLayingBotsUntilHumanTurn,
+  playLayingCard,
 } from "./game/layingRound";
 
 const appRoot = document.querySelector<HTMLDivElement>("#app");
@@ -29,7 +32,23 @@ if (!appRoot) {
 const app = appRoot;
 type GameUiState = TrickRoundState | LayingRoundState;
 
-let state: GameUiState = createInitialGame();
+let state: GameUiState = createInitialUiState();
+let botTurnTimer: number | undefined;
+let highlightedPlayerId: number | null = null;
+
+function createInitialUiState(): GameUiState {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get("round") === "vykladani") {
+    return createLayingRound({
+      players: createPlayers(),
+      dealer: 3,
+      bank: 32,
+    });
+  }
+
+  return createInitialGame();
+}
 
 function render(): void {
   if (state.type === "vykladani") {
@@ -47,7 +66,7 @@ function renderTrickRound(roundState: TrickRoundState): void {
   app.innerHTML = `
     <main class="table">
       <header class="topbar">
-        <div>
+        <div class="brand">
           <h1>Filky</h1>
           <span>Kolo: ${getRoundTitle(roundState.type)}</span>
         </div>
@@ -59,63 +78,44 @@ function renderTrickRound(roundState: TrickRoundState): void {
         <button class="secondary" data-action="new-game">Nova hra</button>
       </header>
 
-      <section class="opponents">
-        ${roundState.players
-          .filter((player) => !player.isHuman)
-          .map(
-            (player) => `
-              <article class="player ${roundState.currentPlayer === player.id ? "active" : ""}">
-                <strong>${player.name}</strong>
-                <span>${player.money - roundState.penalties[player.id]} Kc</span>
-                <span>${roundState.hands[player.id].length} karet</span>
-                ${renderCardDots(roundState.hands[player.id].length)}
-              </article>
-            `,
-          )
-          .join("")}
-      </section>
+      <section class="tabletop">
+        ${renderOpponentSeat(roundState, 2, "top", roundState.players[2].money - roundState.penalties[2], roundState.penalties[2])}
+        ${renderOpponentSeat(roundState, 1, "left", roundState.players[1].money - roundState.penalties[1], roundState.penalties[1])}
 
-      <section class="center">
-        <div class="message">${roundState.message}</div>
-        ${roundState.finished ? renderFinishedRoundAction(roundState) : ""}
-        <div class="trick">
-          ${displayedTrick
-            .map(
-              (played) => `
-                <div class="played-card ${played.card.suit} ${displayedWinner?.playerId === played.playerId ? "taking" : ""}">
-                  <span>${roundState.players[played.playerId].name}</span>
-                  <strong>${cardLabel(played.card)}</strong>
-                </div>
-              `,
-            )
-            .join("")}
-        </div>
-        ${
-          displayedWinner && roundState.trick.length > 0
-            ? `<div class="taking-label">Aktualne bere: ${roundState.players[displayedWinner.playerId].name}</div>`
-            : displayedWinner
-              ? `<div class="taking-label">Posledni stych vzal: ${roundState.players[displayedWinner.playerId].name}</div>`
-            : `<div class="taking-label">Ceka se na vynos.</div>`
-        }
-      </section>
+        <section class="center">
+          <div class="message">${roundState.message}</div>
+          ${roundState.finished ? renderFinishedRoundAction(roundState) : ""}
+          <div class="trick">
+            ${displayedTrick
+              .map(
+                (played) => `
+                  <div class="played-card ${displayedWinner?.playerId === played.playerId ? "taking" : ""}">
+                    <span>${roundState.players[played.playerId].name}</span>
+                    ${renderCardFace(played.card)}
+                  </div>
+                `,
+              )
+              .join("")}
+          </div>
+          ${
+            displayedWinner && roundState.trick.length > 0
+              ? `<div class="taking-label">Aktualne bere: ${roundState.players[displayedWinner.playerId].name}</div>`
+              : displayedWinner
+                ? `<div class="taking-label">Posledni stych vzal: ${roundState.players[displayedWinner.playerId].name}</div>`
+              : `<div class="taking-label">Ceka se na vynos.</div>`
+          }
+        </section>
 
-      <section class="scoreboard">
-        ${roundState.players
-          .map(
-            (player) => `
-              <div class="${roundState.currentPlayer === player.id ? "active" : ""}">
-                <span>${player.name}</span>
-                <strong>${roundState.penalties[player.id]} Kc pokuta</strong>
-              </div>
-            `,
-          )
-          .join("")}
+        ${renderOpponentSeat(roundState, 3, "right", roundState.players[3].money - roundState.penalties[3], roundState.penalties[3])}
       </section>
 
       ${roundState.awaitingNextTrick ? `<section class="table-action"><button class="secondary" data-action="next-trick">Dalsi stych</button></section>` : ""}
 
-      <section class="hand ${roundState.currentPlayer === 0 ? "active" : ""}">
-        ${renderTrickHand(roundState)}
+      <section class="bottom-area">
+        ${renderHumanStatus(roundState, roundState.players[0].money - roundState.penalties[0], `Plati ${roundState.penalties[0]} Kc`)}
+        <div class="hand ${roundState.currentPlayer === 0 ? "active" : ""}">
+          ${renderTrickHand(roundState)}
+        </div>
       </section>
     </main>
   `;
@@ -132,12 +132,14 @@ function renderTrickRound(roundState: TrickRoundState): void {
         return;
       }
 
-      state = playBotsUntilHumanTurn(playHumanCard(state, card));
+      state = playHumanCard(state, card);
       render();
+      scheduleBotTurn();
     });
   });
 
   app.querySelector<HTMLButtonElement>("[data-action='new-game']")?.addEventListener("click", () => {
+    clearPendingBotTurn();
     state = createInitialGame();
     render();
   });
@@ -149,15 +151,14 @@ function renderTrickRound(roundState: TrickRoundState): void {
 
     const nextRound = createNextTrickRound(state);
     state = nextRound
-      ? playBotsUntilHumanTurn(nextRound)
-      : playLayingBotsUntilHumanTurn(
-          createLayingRound({
-            players: settleRoundPenalties(state),
-            dealer: (state.dealer + 1) % 4,
-            bank: state.bank,
-          }),
-        );
+      ? nextRound
+      : createLayingRound({
+          players: settleRoundPenalties(state),
+          dealer: (state.dealer + 1) % 4,
+          bank: state.bank,
+        });
     render();
+    scheduleAutomatedTurn();
   });
 
   app.querySelector<HTMLButtonElement>("[data-action='next-trick']")?.addEventListener("click", () => {
@@ -165,8 +166,9 @@ function renderTrickRound(roundState: TrickRoundState): void {
       return;
     }
 
-    state = playBotsUntilHumanTurn(continueAfterCompletedTrick(state));
+    state = continueAfterCompletedTrick(state);
     render();
+    scheduleBotTurn();
   });
 }
 
@@ -188,12 +190,11 @@ function renderTrickHand(roundState: TrickRoundState): string {
       const isPlayable = legalCards.some((legalCard) => cardId(legalCard) === cardId(card));
       return `
         <button
-          class="card ${card.suit}"
+          class="card-button"
           data-card="${cardId(card)}"
           ${!isPlayable || roundState.finished ? "disabled" : ""}
         >
-          <strong>${card.rank}</strong>
-          <span>${card.suit}</span>
+          ${renderCardFace(card)}
         </button>
       `;
     })
@@ -204,7 +205,7 @@ function renderLayingRound(roundState: LayingRoundState): void {
   app.innerHTML = `
     <main class="table">
       <header class="topbar">
-        <div>
+        <div class="brand">
           <h1>Filky</h1>
           <span>Kolo: Vykladani</span>
         </div>
@@ -216,62 +217,32 @@ function renderLayingRound(roundState: LayingRoundState): void {
         <button class="secondary" data-action="new-game">Nova hra</button>
       </header>
 
-      <section class="opponents">
-        ${roundState.players
-          .filter((player) => !player.isHuman)
-          .map(
-            (player) => `
-              <article class="player ${roundState.currentPlayer === player.id ? "active" : ""}">
-                <strong>${player.name}</strong>
-                <span>${player.money} Kc</span>
-                <span>${roundState.hands[player.id].length} karet</span>
-                ${renderCardDots(roundState.hands[player.id].length)}
-              </article>
-            `,
-          )
-          .join("")}
+      <section class="tabletop">
+        ${renderOpponentSeat(roundState, 2, "top", roundState.players[2].money)}
+        ${renderOpponentSeat(roundState, 1, "left", roundState.players[1].money)}
+
+        <section class="center">
+          <div class="message">${roundState.message}</div>
+          ${roundState.finished ? renderPayoutSummary(roundState) : ""}
+          ${roundState.finished ? `<button class="secondary" data-action="continue-game">Dalsi hra</button>` : ""}
+          ${renderLayingBoard(roundState)}
+          <div class="taking-label">
+            Poradi: ${
+              roundState.finishedOrder.length > 0
+                ? roundState.finishedOrder.map((playerId) => roundState.players[playerId].name).join(", ")
+                : "zatim nikdo"
+            }
+          </div>
+        </section>
+
+        ${renderOpponentSeat(roundState, 3, "right", roundState.players[3].money)}
       </section>
 
-      <section class="center">
-        <div class="message">${roundState.message}</div>
-        ${roundState.finished ? renderPayoutSummary(roundState) : ""}
-        ${roundState.finished ? `<button class="secondary" data-action="continue-game">Dalsi hra</button>` : ""}
-        <div class="laying-rows">
-          ${getLayingRowsForDisplay(roundState.rows)
-            .map(
-              (row) => `
-                <div class="laying-row ${row.suit}">
-                  <strong>${row.suit}</strong>
-                  <span>${row.low} - ${row.high}</span>
-                </div>
-              `,
-            )
-            .join("")}
+      <section class="bottom-area">
+        ${renderHumanStatus(roundState, roundState.players[0].money, `${roundState.hands[0].length} karet`)}
+        <div class="hand ${roundState.currentPlayer === 0 ? "active" : ""}">
+          ${renderLayingHand(roundState)}
         </div>
-        <div class="taking-label">
-          Poradi: ${
-            roundState.finishedOrder.length > 0
-              ? roundState.finishedOrder.map((playerId) => roundState.players[playerId].name).join(", ")
-              : "zatim nikdo"
-          }
-        </div>
-      </section>
-
-      <section class="scoreboard">
-        ${roundState.players
-          .map(
-            (player) => `
-              <div class="${roundState.currentPlayer === player.id ? "active" : ""}">
-                <span>${player.name}</span>
-                <strong>${roundState.hands[player.id].length} karet</strong>
-              </div>
-            `,
-          )
-          .join("")}
-      </section>
-
-      <section class="hand ${roundState.currentPlayer === 0 ? "active" : ""}">
-        ${renderLayingHand(roundState)}
       </section>
     </main>
   `;
@@ -288,12 +259,15 @@ function renderLayingRound(roundState: LayingRoundState): void {
         return;
       }
 
-      state = playLayingBotsUntilHumanTurn(playHumanLayingCard(state, card));
+      state = playHumanLayingCard(state, card);
+      highlightedPlayerId = 0;
       render();
+      scheduleAutomatedTurn();
     });
   });
 
   app.querySelector<HTMLButtonElement>("[data-action='new-game']")?.addEventListener("click", () => {
+    clearPendingBotTurn();
     state = createInitialGame();
     render();
   });
@@ -328,6 +302,38 @@ function renderPayoutSummary(roundState: LayingRoundState): string {
   `;
 }
 
+function renderLayingBoard(roundState: LayingRoundState): string {
+  return `
+    <div class="laying-board">
+      ${suits
+        .map(
+          (suit) => `
+            <div class="laying-row">
+              <div class="laying-slots">
+                ${(["7", "8", "9", "10", "spodek", "svrsek", "kral", "eso"] as const)
+                  .map((rank) => renderLayingSlot(roundState, suit, rank))
+                  .join("")}
+              </div>
+            </div>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderLayingSlot(roundState: LayingRoundState, suit: Suit, rank: Rank): string {
+  const row = roundState.rows[suit];
+  const isPlaced =
+    !!row && ranks.indexOf(rank) >= ranks.indexOf(row.low) && ranks.indexOf(rank) <= ranks.indexOf(row.high);
+
+  if (!isPlaced) {
+    return `<span class="laying-slot empty ${rank === "spodek" ? "spodek-slot" : ""}">${rankLabel(rank)}</span>`;
+  }
+
+  return `<span class="laying-slot ${rank === "spodek" ? "spodek-slot" : ""}">${renderCardFace({ suit, rank })}</span>`;
+}
+
 function renderLayingHand(roundState: LayingRoundState): string {
   const legalCards = roundState.currentPlayer === 0 ? getLegalLayingCards(roundState, 0) : [];
 
@@ -336,24 +342,174 @@ function renderLayingHand(roundState: LayingRoundState): string {
       const isPlayable = legalCards.some((legalCard) => cardId(legalCard) === cardId(card));
       return `
         <button
-          class="card ${card.suit}"
+          class="card-button"
           data-card="${cardId(card)}"
           ${!isPlayable || roundState.finished ? "disabled" : ""}
         >
-          <strong>${card.rank}</strong>
-          <span>${card.suit}</span>
+          ${renderCardFace(card)}
         </button>
       `;
     })
     .join("");
 }
 
-function renderCardDots(count: number): string {
+function renderOpponentSeat(
+  roundState: GameUiState,
+  playerId: number,
+  position: "top" | "left" | "right",
+  money: number,
+  payment?: number,
+): string {
+  const player = roundState.players[playerId];
+  const cardCount = roundState.hands[playerId].length;
+  const paymentLabel = payment === undefined ? "" : `<span>Plati ${payment} Kc</span>`;
+
   return `
-    <span class="card-dots" aria-label="${count} karet">
-      ${Array.from({ length: count }, () => `<i></i>`).join("")}
+    <article class="player seat-${position} ${roundState.currentPlayer === player.id ? "active" : ""} ${highlightedPlayerId === player.id ? "pulse" : ""}">
+      <div class="player-meta">
+        <strong>${player.name}</strong>
+        <span>${money} Kc</span>
+        ${paymentLabel}
+        <span>${cardCount} karet</span>
+      </div>
+      ${renderCardBacks(cardCount)}
+    </article>
+  `;
+}
+
+function renderHumanStatus(roundState: GameUiState, money: number, detail: string): string {
+  return `
+    <section class="human-status ${roundState.currentPlayer === 0 ? "active" : ""} ${highlightedPlayerId === 0 ? "pulse" : ""}">
+      <strong>${roundState.players[0].name}</strong>
+      <span>${money} Kc</span>
+      <span>${detail}</span>
+    </section>
+  `;
+}
+
+function renderCardFace(card: Card): string {
+  return `
+    <span class="card-face suit-${card.suit} rank-${card.rank}" aria-label="${cardLabel(card)}">
+      <span class="sr-only">${cardLabel(card)}</span>
     </span>
   `;
 }
 
+function renderCardBacks(count: number): string {
+  const visibleCount = Math.min(count, 8);
+
+  return `
+    <span class="card-backs" aria-label="${count} karet">
+      ${Array.from({ length: visibleCount }, (_, index) => `<i style="--offset: ${index}"></i>`).join("")}
+    </span>
+  `;
+}
+
+function rankLabel(rank: Rank): string {
+  const labels: Record<Rank, string> = {
+    "7": "7",
+    "8": "8",
+    "9": "9",
+    "10": "10",
+    spodek: "Spodek",
+    svrsek: "Svrsek",
+    kral: "Kral",
+    eso: "Eso",
+  };
+
+  return labels[rank];
+}
+
+function applyCardSpritePositions(): void {
+  const root = document.documentElement;
+
+  ranks.forEach((rank, index) => {
+    const column = index % 4;
+    const row = Math.floor(index / 4);
+    root.style.setProperty(`--rank-${rank}-x`, `${column * 33.333333}%`);
+    root.style.setProperty(`--rank-${rank}-y`, `${row * 100}%`);
+  });
+}
+
+function clearPendingBotTurn(): void {
+  if (botTurnTimer === undefined) {
+    return;
+  }
+
+  window.clearTimeout(botTurnTimer);
+  botTurnTimer = undefined;
+}
+
+function scheduleBotTurn(): void {
+  clearPendingBotTurn();
+
+  if (state.type === "vykladani" || state.finished || state.awaitingNextTrick || state.currentPlayer === 0) {
+    return;
+  }
+
+  botTurnTimer = window.setTimeout(() => {
+    botTurnTimer = undefined;
+
+    if (state.type === "vykladani" || state.finished || state.awaitingNextTrick || state.currentPlayer === 0) {
+      return;
+    }
+
+    const playerId = state.currentPlayer;
+    state = playCard(state, playerId, chooseBotCard(state, playerId));
+    render();
+    scheduleBotTurn();
+  }, 850);
+}
+
+function scheduleLayingTurn(): void {
+  clearPendingBotTurn();
+
+  if (state.type !== "vykladani" || state.finished) {
+    return;
+  }
+
+  const legalCards = getLegalLayingCards(state, state.currentPlayer);
+
+  if (state.currentPlayer === 0 && legalCards.length > 0) {
+    return;
+  }
+
+  botTurnTimer = window.setTimeout(() => {
+    botTurnTimer = undefined;
+
+    if (state.type !== "vykladani" || state.finished) {
+      return;
+    }
+
+    const playerId = state.currentPlayer;
+    const legalCardsForPlayer = getLegalLayingCards(state, playerId);
+    highlightedPlayerId = playerId;
+
+    state =
+      legalCardsForPlayer.length === 0
+        ? passLayingTurn(state, playerId)
+        : playLayingCard(state, playerId, chooseLayingBotCard(state, playerId));
+
+    render();
+    window.setTimeout(() => {
+      if (highlightedPlayerId === playerId) {
+        highlightedPlayerId = null;
+        render();
+      }
+    }, 520);
+    scheduleLayingTurn();
+  }, 900);
+}
+
+function scheduleAutomatedTurn(): void {
+  if (state.type === "vykladani") {
+    scheduleLayingTurn();
+    return;
+  }
+
+  scheduleBotTurn();
+}
+
+applyCardSpritePositions();
 render();
+scheduleAutomatedTurn();

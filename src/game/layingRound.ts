@@ -244,7 +244,7 @@ function placeCard(rows: Partial<Record<Suit, LayingRow>>, card: Card): Partial<
   };
 }
 
-function chooseLayingBotCard(state: LayingRoundState, playerId: number): Card {
+export function chooseLayingBotCard(state: LayingRoundState, playerId: number): Card {
   const legalCards = getLegalLayingCards(state, playerId);
   const nonSpodky = legalCards.filter((card) => card.rank !== "spodek");
   return sortHand(nonSpodky.length > 0 ? nonSpodky : legalCards)[0];
