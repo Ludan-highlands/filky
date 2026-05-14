@@ -5,6 +5,4 @@ dist/
 *.log
 coverage/
 .vite/
-card_back.png
-cards_hearts.png
 Jak začít po logice s upravou UI.txt
